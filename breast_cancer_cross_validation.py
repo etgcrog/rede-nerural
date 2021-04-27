@@ -22,7 +22,7 @@ def criarRede():
     redeNeural.compile(optimizer='Adam', loss='binary_crossentropy', metrics=['binary_accuracy'])
     return redeNeural
 
-classificador = KerasClassifier(build_fn=criarRede, batch_size=10, epochs=100)
+classificador = KerasClassifier(build_fn=criarRede, batch_size=10, epochs=1000)
 
 resultados = cross_val_score(estimator=classificador, X=previsores, y=classes, cv=30, scoring='accuracy')
  
