@@ -17,4 +17,4 @@
     2. Versao 1.10:
         $ pip install mindspore
 
-![predicao](mindspore\img\output.png)
+![predicao](img/output.png)
