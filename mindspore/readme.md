@@ -6,6 +6,7 @@
         $ python3 -m venv venv
         $ source ./venv/Scripts/Activate.ps1
         $ pip install -r requeriments.txt 
+        
     obs: Utilizei o python na versao 3.7.5, pois tive dificuldade com a lib na versao 3.11, 3.9
     [Python3.7.5 Download](https://www.python.org/downloads/release/python-375/)
  ## Instalacao:
