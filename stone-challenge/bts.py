@@ -1,120 +1,113 @@
-from queue import Queue
+import queue
 
-def read_input_file(filename):
-    matrix = []
-    with open(filename, 'r') as file:
-        for line in file:
-            row = [int(cell) for cell in line.strip().split()]
-            matrix.append(row)
-    return matrix
+moves = {
+    'U': (-1, 0),
+    'D': (1, 0),
+    'L': (0, -1),
+    'R': (0, 1)
+}
 
-def atualiza_matriz(matriz):
-    # cria uma nova matriz com as mesmas dimensões da matriz de entrada
-    nova_matriz = [[0 for _ in range(len(matriz[0]))] for _ in range(len(matriz))]
-    
-    # percorre cada célula da matriz de entrada
-    for i in range(len(matriz)):
-        for j in range(len(matriz[0])):
-            # conta o número de células verdes adjacentes
-            num_verdes = 0
-            for k in range(max(i-1, 0), min(i+2, len(matriz))):
-                for l in range(max(j-1, 0), min(j+2, len(matriz[0]))):
-                    if (k, l) != (i, j) and matriz[k][l] == 1:
-                        num_verdes += 1
-            
-            # aplica as regras de acordo com o estado atual da célula
-            if matriz[i][j] == 0: # célula branca
-                if num_verdes > 1 and num_verdes < 5:
-                    nova_matriz[i][j] = 1 # célula fica verde
-                else:
-                    nova_matriz[i][j] = 0 # célula permanece branca
-            else: # célula verde
-                if num_verdes > 3 and num_verdes < 6:
-                    nova_matriz[i][j] = 1 # célula permanece verde
-                else:
-                    nova_matriz[i][j] = 0 # célula fica branca
-                    
-    return nova_matriz
-    
-def bts(estado_inicial, regras, objetivo):
-    fila = Queue()
-    fila.put(estado_inicial)
-    visitados = set()
-    visitados.add(estado_inicial)
+def is_valid_cell(matrix, row, col):
+    """
+    Checa se uma célula é válida na matriz.
+    """
+    return 0 <= row < len(matrix) and 0 <= col < len(matrix[0]) and matrix[row][col] != -1
 
-    while not fila.empty():
-        estado_atual = fila.get()
-        if estado_atual == objetivo:
-            # constrói a sequência de movimentos
-            movimentos = []
-            while estado_atual[1] is not None:
-                movimentos.append(estado_atual[1])
-                estado_atual = estado_atual[0]
-            movimentos.reverse()
-            return ' '.join(movimentos)
-        
-        for novo_estado, movimento in regras(estado_atual):
-            if novo_estado not in visitados:
-                fila.put(novo_estado)
-                visitados.add(novo_estado)
-                novo_estado_pai = (estado_atual, movimento)
-                
+def bfs(matrix, start_row, start_col, goal_row, goal_col):
+    """
+    Executa uma busca em largura para encontrar o menor caminho na matriz entre dois pontos.
+    """
+    q = queue.Queue()
+    visited = set()
+    path = []
+
+    q.put((start_row, start_col, path))
+    visited.add((start_row, start_col))
+
+    while not q.empty():
+        current_row, current_col, path = q.get()
+        if current_row == goal_row and current_col == goal_col:
+            return path
+        for move, (delta_row, delta_col) in moves.items():
+            new_row = current_row + delta_row
+            new_col = current_col + delta_col
+            if (new_row, new_col) not in visited and is_valid_cell(matrix, new_row, new_col):
+                new_path = path.copy()
+                new_path.append(move)
+                q.put((new_row, new_col, new_path))
+                visited.add((new_row, new_col))
+
     return None
 
-def expande_estado(estado, atualiza_matriz):
-    matriz, posicao_particula = estado
-    
-    novos_estados = []
-    i, j = posicao_particula
-    
-    # tenta mover para cima
-    if i > 0 and matriz[i-1][j] == 0:
-        nova_matriz = atualiza_matriz(matriz)
-        nova_matriz[i-1][j] = 2 # marca nova posição da partícula
-        novo_estado = (nova_matriz, (i-1, j))
-        novos_estados.append(novo_estado)
-    
-    # tenta mover para baixo
-    if i < len(matriz)-1 and matriz[i+1][j] == 0:
-        nova_matriz = atualiza_matriz(matriz)
-        nova_matriz[i+1][j] = 2 # marca nova posição da partícula
-        novo_estado = (nova_matriz, (i+1, j))
-        novos_estados.append(novo_estado)
-    
-    # tenta mover para a esquerda
-    if j > 0 and matriz[i][j-1] == 0:
-        nova_matriz = atualiza_matriz(matriz)
-        nova_matriz[i][j-1] = 2 # marca nova posição da partícula
-        novo_estado = (nova_matriz, (i, j-1))
-        novos_estados.append(novo_estado)
-    
-    # tenta mover para a direita
-    if j < len(matriz[0])-1 and matriz[i][j+1] == 0:
-        nova_matriz = atualiza_matriz(matriz)
-        nova_matriz[i][j+1] = 2 # marca nova posição da partícula
-        novo_estado = (nova_matriz, (i, j+1))
-        novos_estados.append(novo_estado)
-    
-    return novos_estados
 
+def is_goal_reached(matrix, current_row, current_col):
+    """
+    Checa se o objetivo foi alcançado (o robô chegou à célula final) em uma determinada posição.
+    """
+    return matrix[current_row][current_col] == 4
 
+def update_matrix(matrix):
+    """
+    Atualiza a matriz de acordo com as regras especificadas.
+    """
+    new_matrix = [[0 for col in range(len(matrix[0]))] for row in range(len(matrix))]
+    for row in range(len(matrix)):
+        for col in range(len(matrix[0])):
+            if matrix[row][col] == 0:
+                green_neighbors = 0
+                for move in moves.values():
+                    new_row = row + move[0]
+                    new_col = col + move[1]
+                    if is_valid_cell(matrix, new_row, new_col) and matrix[new_row][new_col] == 1:
+                        green_neighbors += 1
+                if green_neighbors > 1 and green_neighbors < 5:
+                    new_matrix[row][col] = 1
+            elif matrix[row][col] == 1:
+                green_neighbors = 0
+                for move in moves.values():
+                    new_row = row + move[0]
+                    new_col = col + move[1]
+                    if is_valid_cell(matrix, new_row, new_col) and matrix[new_row][new_col] == 1:
+                        green_neighbors += 1
+                if green_neighbors > 3 and green_neighbors < 6:
+                    new_matrix[row][col] = 1
+            else:
+                new_matrix[row][col] = matrix[row][col]
+    return new_matrix
 
-matriz_inicial = read_input_file('stone-challenge\input.txt')
-matriz_final = read_input_file('stone-challenge\output.txt')
-posicao_particula = None
+def run_bfs(matrix, start_row, start_col, goal_row, goal_col):
+    """
+    Executa o algoritmo BTS.
+    """
+    path = []
+    current_row, current_col = start_row, start_col
+    while not is_goal_reached(matrix, current_row, current_col):
+        shortest_path = bfs(matrix, current_row, current_col, goal_row, goal_col)
+        if shortest_path is None:
+            break
+        path.extend(shortest_path)
+        
+        # Update the current position
+        for move in shortest_path:
+            delta_row, delta_col = moves[move]
+            current_row += delta_row
+            current_col += delta_col
 
-# adiciona a posição inicial da partícula ao estado inicial
-estado_inicial = (matriz_inicial, posicao_particula, None)
+        matrix = update_matrix(matrix)
 
-# regras de transição
-regras = lambda estado: expande_estado(estado, atualiza_matriz)
+    return path
 
-# estado objetivo
-objetivo = (matriz_final, None, None)
+matrix = [    [3, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 1, 0, 1, 1, 0, 0],
+    [0, 1, 1, 0, 0, 1, 1, 0],
+    [0, 0, 1, 0, 1, 1, 0, 0],
+    [0, 0, 0, 0, 1, 0, 0, 0],
+    [0, 0, 0, 0, 0, 0, 0, 4]
+]
 
-# encontra a sequência de movimentos
-movimentos = bts(estado_inicial, regras, objetivo)
+start_row, start_col = 0, 0
+goal_row, goal_col = 6, 7
 
-# imprime a sequência de movimentos
-print(movimentos)
-
+path = run_bfs(matrix, start_row, start_col, goal_row, goal_col)
+print(path)
