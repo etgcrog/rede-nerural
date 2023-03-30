@@ -48,31 +48,23 @@ def is_goal_reached(matrix, current_row, current_col):
 
 def update_matrix(matrix):
     """
-    Atualiza a matriz de acordo com as regras especificadas.
+    Atualiza a matriz de acordo com as regras de propagação.
     """
     new_matrix = [[0 for col in range(len(matrix[0]))] for row in range(len(matrix))]
     for row in range(len(matrix)):
         for col in range(len(matrix[0])):
+            green_neighbors = 0
+            for delta_row, delta_col in moves.values():
+                new_row = row + delta_row
+                new_col = col + delta_col
+                if is_valid_cell(matrix, new_row, new_col) and matrix[new_row][new_col] == 1:
+                    green_neighbors += 1
             if matrix[row][col] == 0:
-                green_neighbors = 0
-                for move in moves.values():
-                    new_row = row + move[0]
-                    new_col = col + move[1]
-                    if is_valid_cell(matrix, new_row, new_col) and matrix[new_row][new_col] == 1:
-                        green_neighbors += 1
                 if green_neighbors > 1 and green_neighbors < 5:
                     new_matrix[row][col] = 1
-            elif matrix[row][col] == 1:
-                green_neighbors = 0
-                for move in moves.values():
-                    new_row = row + move[0]
-                    new_col = col + move[1]
-                    if is_valid_cell(matrix, new_row, new_col) and matrix[new_row][new_col] == 1:
-                        green_neighbors += 1
+            else: # matrix[row][col] == 1
                 if green_neighbors > 3 and green_neighbors < 6:
                     new_matrix[row][col] = 1
-            else:
-                new_matrix[row][col] = matrix[row][col]
     return new_matrix
 
 def run_bfs(matrix, start_row, start_col, goal_row, goal_col):
@@ -93,11 +85,12 @@ def run_bfs(matrix, start_row, start_col, goal_row, goal_col):
             current_row += delta_row
             current_col += delta_col
 
-        matrix = update_matrix(matrix)
+            matrix = update_matrix(matrix)
 
     return path
 
-matrix = [    [3, 0, 0, 0, 0, 0, 0, 0],
+matrix = [    
+    [3, 0, 0, 0, 0, 0, 0, 0],
     [0, 0, 0, 0, 1, 0, 0, 0],
     [0, 0, 1, 0, 1, 1, 0, 0],
     [0, 1, 1, 0, 0, 1, 1, 0],
