@@ -1,15 +1,14 @@
 import random
 
 # Definir matriz inicial
-matrix = [
-    [3, 0, 0, 0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 1, 0, 1, 1, 0, 0],
-    [0, 1, 1, 0, 0, 1, 1, 0],
-    [0, 0, 1, 0, 1, 1, 0, 0],
-    [0, 0, 0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 0, 0, 0, 0, 4],
-]
+def read_file(file_path):
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+        matrix = []
+        for line in lines:
+            row = list(map(int, line.split()))
+            matrix.append(row)
+    return matrix
 
 # Definir movimentos possíveis
 moves = {
@@ -72,6 +71,8 @@ def is_goal_reached(matrix, current_row, current_col):
                 return True
     return False
 
+matrix = read_file("stone-challenge\input.txt")
+
 current_row, current_col = get_current_position(matrix)
 path = []  # Lista para armazenar os movimentos feitos
 while not is_goal_reached(matrix, current_row, current_col):
@@ -96,6 +97,7 @@ while not is_goal_reached(matrix, current_row, current_col):
     print('-' * 20)
 
 # Imprimir o caminho percorrido se o objetivo for alcançado
+
 if is_goal_reached(matrix, current_row, current_col):
     print('Objetivo alcançado! Caminho percorrido:')
     print(path)
